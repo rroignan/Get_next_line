@@ -6,43 +6,52 @@
 /*   By: rroignan <rroignan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/01/20 15:00:52 by rroignan          #+#    #+#             */
-/*   Updated: 2015/01/28 20:47:34 by rroignan         ###   ########.fr       */
+/*   Updated: 2015/01/30 21:27:42 by rroignan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static void		ft_fill(char ***str, char **stk, char **tmp, char **fub)
+static void		ft_alou(char **str, char **stn)
 {
-	**str = ft_strsub(*tmp, 0, (ft_strchr(*tmp, '\n') - *tmp));
-	*stk = ft_strsub(*tmp, (ft_strchr(*tmp, '\n') - *tmp) + 1, ft_strchr(*tmp, '\0') - ft_strchr(*tmp, '\n'));
-	ft_strdel(tmp);
-	ft_strdel(fub);
+	*str = ft_strnew(BUF_SIZE);
+	*stn = ft_strnew(1);
 }
 
-int		get_next_line(int fd, char **line)
+static int		ft_fill(char ***str, char **stk, char **tmp, char **fub)
+{
+	char		*chr;
+
+	chr = ft_strchr(*tmp, '\n');
+	ft_strclr(*stk);
+	**str = ft_strsub(*tmp, 0, (chr - *tmp));
+	*stk = ft_strsub(*tmp, (chr - *tmp) + 1, ft_strchr(*tmp, '\0') - chr);
+	ft_strdel(tmp);
+	ft_strdel(fub);
+	return (1);
+}
+
+static int		ft_lastline(char ***str, char **tmp, char **stk)
+{
+	**str = ft_strsub(*tmp, 0, ft_strchr(*tmp, '\0') - *tmp);
+	ft_strdel(tmp);
+	ft_strdel(stk);
+	return (1);
+}
+
+int				get_next_line(int fd, char **line)
 {
 	char		*buf;
 	char		*temp;
-	static char	*stockage;
+	static char	*sto;
 	int			ret;
 
-	buf = ft_strnew(BUF_SIZE);
-	temp = ft_strnew(1);
-	if (fd < 0 || BUF_SIZE < 0 || line == NULL)
-		return (-1);
-	if (!*line)
-		*line = ft_strnew(1);
-	if (stockage != NULL)
-	{
-		temp = ft_strjoin(temp, stockage);
-		ft_strclr(stockage);
-	}
+	ft_alou(&buf, &temp);
+	(!*line ? *line = ft_strnew(1) : *line);
+	if (sto != NULL)
+		temp = ft_strjoin(temp, sto);
 	if (temp != NULL && ft_strchr(temp, '\n') != NULL)
-	{
-		ft_fill(&line, &stockage, &temp, &buf);
-		return (1);
-	}
+		return (ft_fill(&line, &sto, &temp, &buf));
 	while ((ret = read(fd, buf, BUF_SIZE)) > 0)
 	{
 		temp = ft_strjoin(temp, buf);
@@ -50,17 +59,11 @@ int		get_next_line(int fd, char **line)
 		if (ft_strchr(temp, '\n') != NULL)
 			break ;
 	}
-	if (ret == -1)
+	if (fd < 0 || BUF_SIZE < 0 || line == NULL || ret == -1)
 		return (-1);
-	if (ret == 0 && (stockage == NULL || stockage[0] == '\0') && temp[0] == '\0')
+	if (ret == 0 && (sto == NULL || sto[0] == '\0') && temp[0] == '\0')
 		return (0);
 	if (ft_strchr(temp, '\n') == NULL && ret == 0)
-	{
-		*line = ft_strsub(temp, 0, ft_strchr(temp, '\0') - temp);
-		ft_strdel(&temp);
-		ft_strdel(&stockage);
-		return (1);
-	}
-	ft_fill(&line, &stockage, &temp, &buf);
-	return (1);
+		return (ft_lastline(&line, &temp, &sto));
+	return (ft_fill(&line, &sto, &temp, &buf));
 }

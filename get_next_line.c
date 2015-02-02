@@ -6,11 +6,17 @@
 /*   By: rroignan <rroignan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2015/01/20 15:00:52 by rroignan          #+#    #+#             */
-/*   Updated: 2015/01/30 21:27:42 by rroignan         ###   ########.fr       */
+/*   Updated: 2015/02/02 11:08:39 by rroignan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+
+static void		ft_loop(char **tmp, char **fub)
+{
+	*tmp = ft_strjoin(*tmp, *fub);
+	ft_strclr(*fub);
+}
 
 static void		ft_alou(char **str, char **stn)
 {
@@ -46,20 +52,20 @@ int				get_next_line(int fd, char **line)
 	static char	*sto;
 	int			ret;
 
+	if (line == NULL)
+		return (-1);
 	ft_alou(&buf, &temp);
 	(!*line ? *line = ft_strnew(1) : *line);
-	if (sto != NULL)
-		temp = ft_strjoin(temp, sto);
+	((sto != NULL) ? temp = ft_strjoin(temp, sto) : temp);
 	if (temp != NULL && ft_strchr(temp, '\n') != NULL)
 		return (ft_fill(&line, &sto, &temp, &buf));
 	while ((ret = read(fd, buf, BUF_SIZE)) > 0)
 	{
-		temp = ft_strjoin(temp, buf);
-		ft_strclr(buf);
+		ft_loop(&temp, &buf);
 		if (ft_strchr(temp, '\n') != NULL)
 			break ;
 	}
-	if (fd < 0 || BUF_SIZE < 0 || line == NULL || ret == -1)
+	if (fd < 0 || BUF_SIZE < 0 || ret == -1)
 		return (-1);
 	if (ret == 0 && (sto == NULL || sto[0] == '\0') && temp[0] == '\0')
 		return (0);
